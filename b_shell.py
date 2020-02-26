@@ -49,7 +49,8 @@ def receiveSignal(signum, frame):
 		print("child recieved", signum)
 		sys.exit(0)
 	else:
-		print("parent here")
+		print("error traceback call")
+		return
 
 # ========================
 #    Constructs the full path used to run the external command
