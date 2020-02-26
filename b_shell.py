@@ -51,7 +51,7 @@ def receiveSignal(signum, frame):
 		sys.exit(0)
 	else:
 		print("Returning to b_shell")
-		time.sleep(3)
+		time.sleep(2)
 		return
 
 # ========================
