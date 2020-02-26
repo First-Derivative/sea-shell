@@ -3,6 +3,7 @@ import subprocess
 import signal 
 import os, sys
 import shutil
+import time
 from datetime import datetime
 # Here the path is hardcoded, but you can easily optionally get your PATH environ variable
 # by using: path = os.environ['PATH'] and then splitting based on ':' such as the_path = path.split(':')
@@ -49,7 +50,8 @@ def receiveSignal(signum, frame):
 		print("child recieved", signum)
 		sys.exit(0)
 	else:
-		print("error traceback call")
+		print("Returning to b_shell")
+		time.sleep(3)
 		return
 
 # ========================
