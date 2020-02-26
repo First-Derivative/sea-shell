@@ -17,8 +17,7 @@ THE_PATH = ["/bin/", "/usr/bin/", "/usr/local/bin/", "./"]
 #    Any number of arguments
 # ========================
 
-def runCmd(fields):
-	process = os.fork()
+def runCmd(fields,process):
 	if(process==0):
 		global PID, THE_PATH
 		cmd = fields[0]
@@ -285,4 +284,5 @@ while True:
 	elif(fields[0] == "help"):
 		help_cmd()
 	else:
-		runCmd(fields)
+		process = os.fork()
+		runCmd(fields, process)
