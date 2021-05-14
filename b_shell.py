@@ -5,12 +5,6 @@ import os, sys
 import shutil
 import time
 from datetime import datetime
-# Here the path is hardcoded, but you can easily optionally get your PATH environ variable
-# by using: path = os.environ['PATH'] and then splitting based on ':' such as the_path = path.split(':')
-#pp = os.environ['PATH'] #FULL PATH FOUND IN THIS STRING 
-#print(pp)
-THE_PATH = ["/bin/", "/usr/bin/", "/usr/local/bin/", "./"]
-
 
 # ========================
 #    Run command
@@ -18,49 +12,41 @@ THE_PATH = ["/bin/", "/usr/bin/", "/usr/local/bin/", "./"]
 #    Any number of arguments
 # ========================
 
-def runCmd(fields,process):
-	if(process==0):
-		global PID, THE_PATH
-		cmd = fields[0]
-		cnt = 0
-		args = []
-		while cnt < len(fields):
-			args.append(fields[cnt])
-			cnt += 1
-		execname = add_path(cmd, THE_PATH)
-		#run the executable
-		if not execname:
-			print('Executable file ' + str(cmd) +' not found')
-		else:
-		# execute the command
-			print(execname)
-		# execv executes a new program, replacing the current process; on success, it does not return. 
-		# On Unix, the new executable is loaded into  the current process, and will have the same process id as the caller.
-		try:	
-			os.execv(execname, args)
-		except :
-			print('Something went wrong there')
-			os._exit(0)
-	else:
-		signal.signal(2,receiveSignal)
-		os.wait()
-
-def receiveSignal(signum, frame):
-	if(process==0):
-		print("child recieved", signum)
-		sys.exit(0)
-	else:
-		print("Returning to b_shell")
-		time.sleep(2)
+def runCmd(fields):
+	if(fields[0]  == ""):
 		return
+	execname = add_path(fields[0])
+	
+	if(not execname):
+		print('Executable file ' + str(fields[0]) +' not found')
+		return
+	else:
+		print("Child process:",os.getpid(),"executing from:",execname)
+	try:
+		p = os.fork()
+		if(p == 0):
+			os.execv(execname, fields)
+		else:
+			signal.signal(2, lambda *args: None)
+			child_pid, status = os.waitpid(0,0)
+			exit_status = os.WEXITSTATUS(status)
+			print("\nChild process:", child_pid, "exit code:", exit_status)
+	except OSError:
+		print("Unexpected error has occured")
 
+
+def shellExit():
+	print("\nKeyboard interrupt: exiting process")
+	sys.exit(0)
+		
 # ========================
 #    Constructs the full path used to run the external command
 #    Checks to see if the file is executable
 # ========================
-def add_path(cmd, path):
+def add_path(cmd):
+	THE_PATH = ["/bin/", "/usr/bin/", "/usr/local/bin/", "./"]
 	if cmd[0] not in ['/', '.']:
-		for d in path:
+		for d in THE_PATH:
 			execname = d + cmd
 			if(os.path.isfile(execname) and os.access(execname, os.X_OK)):
 				return execname
@@ -266,7 +252,14 @@ def checkArgs(fields, num):
 # ----------------------------------------------------------------------------------------------------------------------
 
 while True:
-	line = input("b_Shell>")  # NOTE! This is only for python 2. Should be 'input' for python 3
+	line = ''
+	try:
+		line = input("b_Shell>")  # NOTE! This is only for python 2. Should be 'input' for python 3
+#	except KeyboardInterrupt:
+#		sys.exit('\n Keyboard interrupt: exiting process')
+	except EOFError:
+		sys.exit('\n EOFError: exiting process')
+	
 	fields = line.split()
 	if(fields[0] == "files"):
 		files_cmd(fields)
@@ -287,5 +280,4 @@ while True:
 	elif(fields[0] == "help"):
 		help_cmd()
 	else:
-		process = os.fork()
-		runCmd(fields, process)
+		runCmd(fields)
